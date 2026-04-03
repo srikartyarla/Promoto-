@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promoto - Find & Organize Events</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <img src="Gemini_Generated_Image_b3a5svb3a5svb3a5 - Copy.png" alt="PROMOTO"
+        height="150"></imag>
+            <a href="index.html" class="logo">Promoto</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="#events">Find Events</a></li>
+                    <li><a href="organize.html">Organize an Event</a></li>
+                    <li class="login-btn"><a href="login.html">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Find Your Next College Experience</h1>
+                <p>Search for technical fests, cultural nights, and sports tournaments happening across various college campuses.</p>
+                <form class="search-form" id="search-form">
+                    <input type="search" id="search-input" placeholder="Search for events, colleges... ">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="events" class="upcoming-events">
+            <div class="container">
+                <h2 id="events-title">Upcoming Events</h2>
+                <div class="event-grid" id="event-grid-home"></div>
+            </div>
+        </section>
+
+        <section id="colleges" class="college-section">
+            <div class="container">
+                <h2 id="colleges-title">Browse by College</h2>
+                <div class="college-grid" id="college-grid"></div>
+            </div>
+        </section>
+        
+        <section class="organizer-section">
+            <div class="container">
+                <h2>Want to Organize an Event?</h2>
+                <p>If you have an idea for a new event, we're here to help. Submit your proposal and we'll get it listed.</p>
+                <a href="organize.html" class="cta-button">Submit Your Event</a>
+            </div>
+        </section>
+    </main>
+    <footer class="main-footer">
+        <div class="container">
+            <ul class="footer-links">
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="admin-login.html">Admin Login</a></li>
+            </ul>
+            <p>&copy; 2025 College Event Hub. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const collegeGrid = document.getElementById('college-grid');
+        const eventGridHome = document.getElementById('event-grid-home');
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const eventsTitle = document.getElementById('events-title');
+        const collegesTitle = document.getElementById('colleges-title');
+
+        // Reusable function to render a list of colleges
+        function displayColleges(colleges) {
+            collegeGrid.innerHTML = '';
+            if (colleges && colleges.length > 0) {
+                colleges.forEach(college => {
+                    const collegeCard = document.createElement('a');
+                    collegeCard.href = `events.html?collegeId=${college.id}`;
+                    collegeCard.className = 'college-card';
+                    collegeCard.innerHTML = `<h3>${college.name}</h3>`;
+                    collegeGrid.appendChild(collegeCard);
+                });
+            } else {
+                collegeGrid.innerHTML = '<p>No colleges found.</p>';
+            }
+        }
+
+        // Reusable function to render a list of events
+        function displayEvents(events) {
+            eventGridHome.innerHTML = '';
+            if (events && events.length > 0) {
+                events.forEach(event => {
+                    const eventCard = document.createElement('a');
+                    eventCard.href = event.registrationLink;
+                    eventCard.target = '_blank';
+                    eventCard.className = 'event-card';
+                    eventCard.innerHTML = `
+                        <div class="event-content">
+                            <span class="event-domain">${event.domain}</span>
+                            <h3>${event.name}</h3>
+                            <p class="college-name">At: ${event.collegeName}</p>
+                        </div>
+                        <div class="event-footer">
+                            <span>View & Register</span>
+                        </div>
+                    `;
+                    eventGridHome.appendChild(eventCard);
+                });
+            } else {
+                eventGridHome.innerHTML = '<p>No events found.</p>';
+            }
+        }
+
+        // --- Load initial data on page load ---
+        async function loadInitialData() {
+            try {
+                const [collegesRes, eventsRes] = await Promise.all([
+                    fetch('http://127.0.0.1:5000/api/colleges'),
+                    fetch('http://127.0.0.1:5000/api/events')
+                ]);
+                const colleges = await collegesRes.json();
+                const allEvents = await eventsRes.json();
+                
+                displayColleges(colleges);
+                displayEvents(allEvents.slice(0, 3)); // Show 3 most recent events
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
+                collegeGrid.innerHTML = '<p>Error loading data from the server.</p>';
+                eventGridHome.innerHTML = '<p>Error loading data from the server.</p>';
+            }
+        }
+
+        // --- Handle Search Form Submission ---
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (!query) {
+                eventsTitle.textContent = 'Upcoming Events';
+                collegesTitle.textContent = 'Browse by College';
+                loadInitialData();
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/search?q=${query}`);
+                const results = await response.json();
+                
+                eventsTitle.textContent = `Event Results for "${query}"`;
+                collegesTitle.textContent = `College Results for "${query}"`;
+                
+                displayEvents(results.events);
+                displayColleges(results.colleges);
+
+            } catch (error) {
+                console.error('Search failed:', error);
+                eventGridHome.innerHTML = '<p>Search failed. Could not connect to server.</p>';
+            }
+        });
+
+        loadInitialData();
+    });
+    </script>
+</body>
+</html>

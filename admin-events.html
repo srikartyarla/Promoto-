@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve Events - Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .event-item .actions button { margin-left: 0.5rem; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        .actions .approve-btn { background-color: #2ecc71; color: white; }
+        .actions .reject-btn { background-color: #f1c40f; color: white; }
+        /* --- ADDED THIS STYLE --- */
+        .actions .admin-delete-btn { background-color: #e74c3c; color: white; } 
+        .event-item a { color: #3498db; text-decoration: underline; }
+        .status-tag { padding: 0.2rem 0.6rem; border-radius: 10px; font-size: 0.8em; color: white; }
+        .status-pending { background-color: #f39c12; }
+        .status-approved { background-color: #2ecc71; }
+        .status-rejected { background-color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo">Event Hub [Admin]</a>
+            <nav><a href="admin.html" style="color: white; font-weight: 600;">Manage Colleges</a></nav>
+        </div>
+    </header>
+    <main class="admin-panel">
+        <div class="container">
+            <h1>Manage Events</h1>
+            <div class="list-card" id="events-list"></div>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const listContainer = document.getElementById('events-list');
+            const response = await fetch('http://127.0.0.1:5000/api/events/all-for-admin');
+            const allEvents = await response.json();
+            
+            listContainer.innerHTML = '';
+            if (allEvents.length > 0) {
+                allEvents.forEach(event => {
+                    const item = document.createElement('div');
+                    item.className = 'college-item';
+                    item.innerHTML = `
+                        <div>
+                            <p><strong>${event.name}</strong> at ${event.collegeName}</p>
+                            <p>Status: <span class="status-tag status-${event.status}">${event.status}</span></p>
+                            ${event.permission_filename ? `<a href="http://127.0.0.1:5000/uploads/${event.permission_filename}" target="_blank">View Permission Letter</a>` : '<p>No letter uploaded.</p>'}
+                        </div>
+                        <div class="actions">
+                            ${event.status === 'pending' ? `<button class="approve-btn" data-id="${event.id}">Approve</button> <button class="reject-btn" data-id="${event.id}">Reject</button>` : ''}
+                            <button class="admin-delete-btn" data-id="${event.id}">Delete</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            } else {
+                listContainer.innerHTML = '<p>No events have been submitted.</p>';
+            }
+
+            listContainer.addEventListener('click', async (e) => {
+                const id = e.target.dataset.id;
+                let action = '';
+                if (e.target.classList.contains('approve-btn')) action = 'approve';
+                if (e.target.classList.contains('reject-btn')) action = 'reject';
+                
+                if (action && id) {
+                    await fetch(`http://127.0.0.1:5000/api/events/${id}/${action}`, { method: 'POST' });
+                    window.location.reload();
+                }
+
+                // --- ADDED THIS JAVASCRIPT LOGIC FOR THE DELETE BUTTON ---
+                if (e.target.classList.contains('admin-delete-btn')) {
+                    if (confirm('Are you sure you want to PERMANENTLY delete this event? This cannot be undone.')) {
+                        try {
+                            const response = await fetch(`http://127.0.0.1:5000/api/events/${id}`, {
+                                method: 'DELETE'
+                            });
+                            if (response.ok) {
+                                window.location.reload(); // Refresh the list
+                            } else {
+                                alert('Failed to delete event. Server responded with an error.');
+                            }
+                        } catch (error) {
+                            console.error('Failed to delete event:', error);
+                            alert('Error: Could not delete the event.');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

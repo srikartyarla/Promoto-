@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - College Event Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo">Event Hub [Admin]</a>
+            <a href="admin-login.html" class="logout-btn">Logout</a>
+        </div>
+    </header>
+    <main>
+        <section class="admin-panel">
+            <div class="container">
+                <h1>Manage Colleges</h1>
+                <a href="admin-events.html" style="display: block; text-align: center; margin-bottom: 2rem; font-size: 1.2rem; color: #3498db;">Go to Event Management &rarr;</a>
+                
+                <div class="form-card">
+                    <h2>Add New College</h2>
+                    <form id="add-college-form">
+                        <input type="text" id="new-college-name" placeholder="Enter college name..." required>
+                        <button type="submit" class="action-btn">Add</button>
+                    </form>
+                </div>
+                <div class="list-card">
+                    <h2>Existing Colleges</h2>
+                    <div id="college-list"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const addForm = document.getElementById('add-college-form');
+            const collegeNameInput = document.getElementById('new-college-name');
+            const collegeListContainer = document.getElementById('college-list');
+            const API_URL = 'http://127.0.0.1:5000/api/colleges';
+
+            async function renderAdminList() {
+                try {
+                    const response = await fetch(API_URL);
+                    const colleges = await response.json();
+                    
+                    collegeListContainer.innerHTML = '';
+                    if (colleges.length === 0) {
+                        collegeListContainer.innerHTML = '<p>No colleges added yet.</p>';
+                        return;
+                    }
+                    
+                    colleges.forEach(college => {
+                        const item = document.createElement('div');
+                        item.className = 'college-item';
+                        item.innerHTML = `
+                            <p>${college.name}</p>
+                            <button class="delete-btn" data-id="${college.id}">Delete</button>
+                        `;
+                        collegeListContainer.appendChild(item);
+                    });
+                } catch (error) {
+                    console.error('Failed to fetch colleges:', error);
+                    collegeListContainer.innerHTML = '<p>Error loading colleges from server.</p>';
+                }
+            }
+
+            addForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const collegeName = collegeNameInput.value.trim();
+                if (collegeName) {
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name: collegeName })
+                        });
+                        addForm.reset();
+                        renderAdminList();
+                    } catch (error) {
+                        console.error('Failed to add college:', error);
+                        alert('Error adding college. Please check server connection.');
+                    }
+                }
+            });
+
+            collegeListContainer.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const collegeId = e.target.dataset.id;
+                    if (confirm('Are you sure you want to delete this college?')) {
+                        try {
+                            await fetch(`${API_URL}/${collegeId}`, { method: 'DELETE' });
+                            renderAdminList();
+                        } catch (error) {
+                            console.error('Failed to delete college:', error);
+                            alert('Error deleting college. Please check server connection.');
+                        }
+                    }
+                }
+            });
+            renderAdminList();
+        });
+    </script>
+</body>
+</html>

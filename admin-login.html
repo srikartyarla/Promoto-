@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - College Event Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <a href="index.html" class="logo">Event Hub</a>
+        </div>
+    </header>
+    <main>
+        <section class="login-section">
+            <div class="form-container">
+                <h1>Administrator Login</h1>
+                <form id="admin-login-form">
+                    <div class="form-group">
+                        <label for="email">Admin Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-container" style="position: relative;">
+                            <input type="password" id="password" required style="width: 100%; padding-right: 2.5rem;">
+                             <span class="toggle-password" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: #9ca3af; width: 1.25rem; height: 1.25rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" /><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.18l.82-1.425a1.651 1.651 0 0 1 1.516-.865h12.878a1.651 1.651 0 0 1 1.516.865l.82 1.425a1.651 1.651 0 0 1 0 1.18l-.82 1.425a1.651 1.651 0 0 1-1.516.865H3.001a1.651 1.651 0 0 1-1.516-.865l-.82-1.425ZM5.525 12a4.475 4.475 0 0 0 8.95 0H5.525Z" clip-rule="evenodd" /></svg>
+                            </span>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Access Panel</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        document.getElementById('admin-login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/admin-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    window.location.href = 'admin.html';
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Admin login failed:', error);
+                alert('Could not connect to the server.');
+            }
+        });
+    </script>
+</body>
+</html>
