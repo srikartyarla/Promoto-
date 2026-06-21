@@ -52,7 +52,7 @@
 
             try {
                 // Fetch all colleges to find the name for the title
-                const collegesResponse = await fetch('http://127.0.0.1:5000/api/colleges');
+                const collegesResponse = await fetch('https://promoto-glx0.onrender.com/api/colleges');
                 const allColleges = await collegesResponse.json();
                 const currentCollege = allColleges.find(c => c.id == collegeId);
 
@@ -63,7 +63,7 @@
                 }
 
                 // Fetch the events specifically for this college
-                const eventsResponse = await fetch(`http://127.0.0.1:5000/api/colleges/${collegeId}/events`);
+                const eventsResponse = await fetch(`https://promoto-glx0.onrender.com/api/colleges/${collegeId}/events`);
                 const collegeEvents = await eventsResponse.json();
 
                 eventGrid.innerHTML = ''; // Clear loading message

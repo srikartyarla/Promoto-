@@ -34,7 +34,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const listContainer = document.getElementById('events-list');
-            const response = await fetch('http://127.0.0.1:5000/api/events/all-for-admin');
+            const response = await fetch('https://promoto-glx0.onrender.com/api/events/all-for-admin');
             const allEvents = await response.json();
             
             listContainer.innerHTML = '';
@@ -46,7 +46,7 @@
                         <div>
                             <p><strong>${event.name}</strong> at ${event.collegeName}</p>
                             <p>Status: <span class="status-tag status-${event.status}">${event.status}</span></p>
-                            ${event.permission_filename ? `<a href="http://127.0.0.1:5000/uploads/${event.permission_filename}" target="_blank">View Permission Letter</a>` : '<p>No letter uploaded.</p>'}
+                            ${event.permission_filename ? `<a href="https://promoto-glx0.onrender.com/uploads/${event.permission_filename}" target="_blank">View Permission Letter</a>` : '<p>No letter uploaded.</p>'}
                         </div>
                         <div class="actions">
                             ${event.status === 'pending' ? `<button class="approve-btn" data-id="${event.id}">Approve</button> <button class="reject-btn" data-id="${event.id}">Reject</button>` : ''}
@@ -66,7 +66,7 @@
                 if (e.target.classList.contains('reject-btn')) action = 'reject';
                 
                 if (action && id) {
-                    await fetch(`http://127.0.0.1:5000/api/events/${id}/${action}`, { method: 'POST' });
+                    await fetch(`https://promoto-glx0.onrender.com/api/events/${id}/${action}`, { method: 'POST' });
                     window.location.reload();
                 }
 
@@ -74,7 +74,7 @@
                 if (e.target.classList.contains('admin-delete-btn')) {
                     if (confirm('Are you sure you want to PERMANENTLY delete this event? This cannot be undone.')) {
                         try {
-                            const response = await fetch(`http://127.0.0.1:5000/api/events/${id}`, {
+                            const response = await fetch(`https://promoto-glx0.onrender.com/api/events/${id}`, {
                                 method: 'DELETE'
                             });
                             if (response.ok) {
