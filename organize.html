@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organize an Event - College Event Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <a href="index.html" class="logo">Promoto</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="organize.html">Organize an Event</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <section class="form-section">
+            <div class="container">
+                <h1>Submit Your Event Proposal</h1>
+                <form class="event-form" id="event-proposal-form">
+                    <div class="form-group"><label for="event_name">Event Name</label><input type="text" id="event_name" required></div>
+                    
+                    <div class="form-group">
+                        <label for="hosting_college">Hosting College</label>
+                        <select id="hosting_college" required>
+                            <option value="" disabled selected>Loading colleges...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group"><label for="event_domain">Event Domain</label><select id="event_domain" required><option value="" disabled selected>Select a domain...</option><option value="technical">Technical</option><option value="cultural">Cultural</option><option value="sports">Sports</option><option value="workshop">Workshop</option><option value="social">Social</option><option value="other">Other</option></select></div>
+                    
+                    <div class="form-group">
+                        <label>Event Organizers & Team Members</label>
+                        <div id="organizers-list">
+                            <div class="organizer-row">
+                                <div class="input-group"><input type="text" name="organizer_name" placeholder="Member Name & Position" required></div>
+                                <div class="input-group"><input type="email" name="organizer_email" placeholder="Email Address" required></div>
+                                <div class="input-group"><input type="tel" name="organizer_phone" placeholder="Phone Number" required></div>
+                                <button type="button" class="remove-btn" onclick="removeOrganizer(this)">-</button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-organizer-btn" class="add-btn">Add Member</button>
+                    </div>
+                    
+                    <div class="form-group"><label for="reg_link">Registration Link</label><input type="url" id="reg_link" placeholder="https://example.com/register" required></div>
+
+                    <div class="form-group">
+                        <label for="permissions">Permission Letter from College</label>
+                        <input type="file" id="permissions" name="permissions" accept=".pdf,.doc,.docx,.jpg,.png" required>
+                        <p class="form-note" id="file-info">Please upload the signed permission document. (PDF, DOC, JPG formats supported)</p>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Event</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const collegeSelect = document.getElementById('hosting_college');
+            const form = document.getElementById('event-proposal-form');
+
+            async function populateColleges() {
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/api/colleges');
+                    const colleges = await response.json();
+                    
+                    collegeSelect.innerHTML = '<option value="" disabled selected>Select a college...</option>';
+                    
+                    if (colleges.length > 0) {
+                        colleges.forEach(college => {
+                            const option = document.createElement('option');
+                            option.value = college.id;
+                            option.textContent = college.name;
+                            collegeSelect.appendChild(option);
+                        });
+                    } else {
+                        collegeSelect.innerHTML = '<option value="" disabled>No colleges available. An admin must add one.</option>';
+                    }
+                } catch (error) {
+                    console.error('Failed to load colleges:', error);
+                    collegeSelect.innerHTML = '<option value="" disabled>Error loading colleges.</option>';
+                }
+            }
+            
+            populateColleges();
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData();
+                formData.append('name', document.getElementById('event_name').value);
+                formData.append('collegeId', document.getElementById('hosting_college').value);
+                formData.append('domain', document.getElementById('event_domain').value);
+                formData.append('registrationLink', document.getElementById('reg_link').value);
+                formData.append('permissions', document.getElementById('permissions').files[0]);
+
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/api/events', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const responseData = await response.json();
+                    alert(responseData.message);
+
+                    if (response.ok) {
+                        e.target.reset();
+                        document.getElementById('file-info').textContent = 'Please upload the signed permission document.';
+                        document.getElementById('file-info').style.color = '#aaa';
+                    }
+                } catch (error) {
+                    console.error('Failed to submit event:', error);
+                    alert('Could not connect to the server to submit the event.');
+                }
+            });
+        });
+
+        document.getElementById('add-organizer-btn').addEventListener('click', function() {
+            const list = document.getElementById('organizers-list');
+            const newRow = document.createElement('div');
+            newRow.className = 'organizer-row';
+            newRow.innerHTML = `
+                <div class="input-group"><input type="text" name="organizer_name" placeholder="Member Name & Position" required></div>
+                <div class="input-group"><input type="email" name="organizer_email" placeholder="Email Address" required></div>
+                <div class="input-group"><input type="tel" name="organizer_phone" placeholder="Phone Number" required></div>
+                <button type="button" class="remove-btn" onclick="removeOrganizer(this)">-</button>
+            `;
+            list.appendChild(newRow);
+        });
+
+        function removeOrganizer(button) {
+            if (document.querySelectorAll('.organizer-row').length > 1) {
+                button.parentElement.remove();
+            } else {
+                alert("You must have at least one organizer.");
+            }
+        }
+        
+        const permissionInput = document.getElementById('permissions');
+        const fileInfo = document.getElementById('file-info');
+
+        permissionInput.addEventListener('change', function() {
+            if (permissionInput.files.length > 0) {
+                const fileName = permissionInput.files[0].name;
+                fileInfo.textContent = `✓ Selected file: ${fileName}`;
+                fileInfo.style.color = '#2ecc71';
+            } else {
+                fileInfo.textContent = 'Please upload the signed permission document. (PDF, DOC, JPG formats supported)';
+                fileInfo.style.color = '#aaa';
+            }
+        });
+    </script>
+</body>
+</html>

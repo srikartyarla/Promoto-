@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - College Event Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <a href="index.html" class="logo">Promoto</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="organize.html">Organize an Event</a></li>
+                    <li class="login-btn"><a href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="events-page-section">
+            <div class="container">
+                <h1 id="page-title" class="page-title">Events at <span class="college-highlight">Loading...</span></h1>
+                <a href="index.html#colleges" class="back-link">&larr; Back to All Colleges</a>
+                <div class="event-grid" id="events-for-college-grid">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2025 College Event Hub. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const pageTitleElement = document.getElementById('page-title');
+            const eventGrid = document.getElementById('events-for-college-grid');
+            const urlParams = new URLSearchParams(window.location.search);
+            const collegeId = urlParams.get('collegeId');
+
+            if (!collegeId) {
+                pageTitleElement.textContent = 'College Not Found';
+                eventGrid.innerHTML = '<p class="no-events-message">No college ID was provided in the URL.</p>';
+                return;
+            }
+
+            try {
+                // Fetch all colleges to find the name for the title
+                const collegesResponse = await fetch('http://127.0.0.1:5000/api/colleges');
+                const allColleges = await collegesResponse.json();
+                const currentCollege = allColleges.find(c => c.id == collegeId);
+
+                if (currentCollege) {
+                    pageTitleElement.innerHTML = `Events at <span class="college-highlight">${currentCollege.name}</span>`;
+                } else {
+                    pageTitleElement.textContent = 'College Not Found';
+                }
+
+                // Fetch the events specifically for this college
+                const eventsResponse = await fetch(`http://127.0.0.1:5000/api/colleges/${collegeId}/events`);
+                const collegeEvents = await eventsResponse.json();
+
+                eventGrid.innerHTML = ''; // Clear loading message
+                if (collegeEvents.length > 0) {
+                    collegeEvents.forEach(event => {
+                        const eventCard = document.createElement('a');
+                        eventCard.href = event.registrationLink;
+                        eventCard.target = '_blank';
+                        eventCard.className = 'event-card';
+
+                        eventCard.innerHTML = `
+                            <div class="event-content">
+                                <span class="event-domain">${event.domain}</span>
+                                <h3>${event.name}</h3>
+                            </div>
+                            <div class="event-footer">
+                                <span>View & Register</span>
+                            </div>
+                        `;
+                        eventGrid.appendChild(eventCard);
+                    });
+                } else {
+                    eventGrid.innerHTML = '<p class="no-events-message">No events have been submitted for this college yet. Be the first!</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load page data:', error);
+                pageTitleElement.textContent = 'Error';
+                eventGrid.innerHTML = '<p class="no-events-message">Could not load event data from the server.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
