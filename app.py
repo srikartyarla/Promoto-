@@ -189,13 +189,7 @@ def search():
         "colleges": [{"id": c.id, "name": c.name} for c in college_results]
     }
     return jsonify(results)
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
 
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('.', filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
