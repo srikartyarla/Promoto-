@@ -39,6 +39,14 @@ def create_admin_command(email, password):
 
 # --- API ENDPOINTS ---
 # == AUTHENTICATION ==
+@app.route('/')
+def home():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('.', filename)
+
 @app.route("/api/signup", methods=['POST'])
 def signup():
     data = request.get_json()

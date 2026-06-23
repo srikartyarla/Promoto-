@@ -68,6 +68,11 @@
     </footer>
 
     <script>
+        // Redirect to login if not logged in
+const loggedInUser = localStorage.getItem('promoto_user');
+if (!loggedInUser) {
+    window.location.href = 'login.html';
+}
     document.addEventListener('DOMContentLoaded', () => {
         const collegeGrid = document.getElementById('college-grid');
         const eventGridHome = document.getElementById('event-grid-home');
